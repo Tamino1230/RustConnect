@@ -13,8 +13,11 @@ RUN go mod download
 
 COPY src/Server/ .
 
-RUN CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o server.exe .
+ENV CGO_ENABLED=0
+ENV GOOS=windows
+ENV GOARCH=amd64
 
+RUN go build -ldflags="-s -w" -o server.exe .
 FROM mcr.microsoft.com/windows/nanoserver:ltsc2022
 
 WORKDIR /app
