@@ -8,22 +8,26 @@ FROM golang:1.22 AS builder
 
 WORKDIR /app
 
-COPY src/Server/go.mod src/Server/go.sum ./
+COPY go.mod go.sum ./
 RUN go mod download
 
-COPY src/Server/ .
+COPY . .
 
 ENV CGO_ENABLED=0
-ENV GOOS=windows
+ENV GOOS=linux
 ENV GOARCH=amd64
 
-RUN go build -ldflags="-s -w" -o server.exe .
-FROM mcr.microsoft.com/windows/nanoserver:ltsc2022
+RUN go build -ldflags="-s -w" -o server .
+
+FROM alpine:latest
 
 WORKDIR /app
 
-COPY --from=builder /app/server.exe .
+RUN apk --no-cache add ca-certificates
+
+COPY --from=builder /app/server .
 
 EXPOSE 8080
 
-CMD ["server.exe"]
+# run it
+CMD ["./server"]
