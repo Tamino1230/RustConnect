@@ -1,0 +1,6 @@
+user_cache.txt
+target/
+*.exe
+
+# for setup.iss
+Output/
