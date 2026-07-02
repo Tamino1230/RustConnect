@@ -8,14 +8,14 @@ on:
       - ".github/**"
       - "README.md"
       - "LICENSE"
-      - "Server/dockerfile"
+      - "Server/Dockerfile"
   pull_request:
     paths-ignore:
       - "docs/**"
       - ".github/**"
       - "README.md"
       - "LICENSE"
-      - "Server/dockerfile"
+      - "Server/Dockerfile"
 
 jobs:
   rust:
