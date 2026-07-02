@@ -587,7 +587,7 @@ fn start_watching_thread(
                     Ok(None) => break,
 
                     Err(_) => {
-                        // timeout
+                        // timeout: just continue instead of dying
                         continue;
                     }
 

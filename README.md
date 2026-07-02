@@ -19,11 +19,10 @@
     <img alt="Website" src="https://img.shields.io/website?url=http%3A%2F%2Frc.tamino1230.me">
     <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/Tamino1230/RustConnect/build.yml">
     <img alt="GitHub Downloads (all assets, all releases)" src="https://img.shields.io/github/downloads/Tamino1230/RustConnect/total">
-
-
-
+</p>
 
 <p align="center">
+    <p>Help is veryyyy welcome here :3</p>
     <img src="docs/connection.png">
     <img height="360px" src="docs/stream.png">
 </p>
