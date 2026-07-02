@@ -1,6 +1,6 @@
 package main
 
-// trigger workflow ||I||
+// trigger workflow ||I|||
 
 import (
 	"crypto/rand"
