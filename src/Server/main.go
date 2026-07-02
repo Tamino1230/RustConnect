@@ -1,5 +1,7 @@
 package main
 
+// trigger workflow
+
 import (
 	"crypto/rand"
 	"encoding/hex"
