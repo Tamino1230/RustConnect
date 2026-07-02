@@ -1,0 +1,23 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+        - "docs/**"
+        - ".github/**"
+        - "README.md"
+        - "LICENSE"
+        - "Server/dockerfile"
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: |
+        docker build -f src/Server/dockerfile -t rust-connect-server:latest .

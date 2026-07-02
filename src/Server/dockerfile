@@ -1,0 +1,26 @@
+
+#
+# Gemini 3.5 Flash Generated.
+# For Deploying Server
+#
+
+FROM golang:1.22 AS builder
+
+WORKDIR /app
+
+COPY src/Server/go.mod src/Server/go.sum ./
+RUN go mod download
+
+COPY src/Server/ .
+
+RUN CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o server.exe .
+
+FROM mcr.microsoft.com/windows/nanoserver:ltsc2022
+
+WORKDIR /app
+
+COPY --from=builder /app/server.exe .
+
+EXPOSE 8080
+
+CMD ["server.exe"]
