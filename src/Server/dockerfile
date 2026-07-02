@@ -8,10 +8,12 @@ FROM golang:1.22 AS builder
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
+# copy module files from correct folder
+COPY src/Server/go.mod src/Server/go.sum ./
 RUN go mod download
 
-COPY . .
+# copy full server source
+COPY src/Server/ ./
 
 ENV CGO_ENABLED=0
 ENV GOOS=linux
@@ -22,12 +24,10 @@ RUN go build -ldflags="-s -w" -o server .
 FROM alpine:latest
 
 WORKDIR /app
-
 RUN apk --no-cache add ca-certificates
 
 COPY --from=builder /app/server .
 
 EXPOSE 8080
 
-# run it
 CMD ["./server"]
