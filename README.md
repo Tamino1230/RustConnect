@@ -33,6 +33,7 @@
 
 > [!CAUTION]
 > Experimental Webserver! For localhost / exposing port change to localhost in DevBuild.
+> Due to Server-limitation is the Screensharing not smooth!
 
 ## Installation
 Go to the [Latest Release](https://github.com/Tamino1230/RustConnect/releases/latest) and download the `RustConnectionInstaller.exe` and run it!
