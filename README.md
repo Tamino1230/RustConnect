@@ -10,14 +10,18 @@
 <hr>
 
 <p align="center">
-    <a target="_blank" href="https://github.com/Tamino1230/RustConnect/releases/download/v0.1.0/RustConnectInstaller.exe">
+    <a target="_blank" href="https://github.com/Tamino1230/RustConnect/releases/download/v1.0.0/RustConnectInstaller.exe">
         <img alt="Website" src="https://img.shields.io/badge/windows-instant_download_link-green">
+    </a>
+    <a target="_blank" href="https://github.com/Tamino1230/RustConnect/releases/download/v1.0.0/RustConnect-Linux.zip">
+        <img alt="Website" src="https://img.shields.io/badge/linux-instant_download_link-blue">
     </a>
 </p>
 
 <p align="center">
-    <img alt="Website" src="https://img.shields.io/website?url=http%3A%2F%2Frc.tamino1230.me">
-    <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/Tamino1230/RustConnect/build.yml">
+    <img alt="Website" src="https://img.shields.io/website?url=https%3A%2F%2Frustconnectserver.onrender.com&up_message=Currently%20Up&down_message=In%20sleepmode&label=RC%20API">
+    <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/Tamino1230/RustConnect/linux_build.yml?label=Linux%20Build">
+    <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/Tamino1230/RustConnect/build.yml?label=Windows%20Build">
     <img alt="GitHub Downloads (all assets, all releases)" src="https://img.shields.io/github/downloads/Tamino1230/RustConnect/total">
 </p>
 
@@ -34,10 +38,17 @@
 Go to the [Latest Release](https://github.com/Tamino1230/RustConnect/releases/latest) and download the `RustConnectionInstaller.exe` and run it!
 
 ## Making Dev Build
+
+### Windows
 If you wanna edit code and make a dev build run:
 ```sh
+# on windows
 git clone https://github.com/Tamino1230/RustConnect.git
 cd RustConnect/src/build/
-.\build.bat
+.\build.bat 
+
+# on linux 
+chmod +x linuxAppBuild.sh
+linuxAppBuild.sh
 ```
 then the **RustConnect.exe** will appear in the build folder.
