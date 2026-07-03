@@ -28,7 +28,7 @@
 </p>
 
 > [!CAUTION]
-> This product can **CURRENTLY** only be used with a local server.
+> Experimental Webserver! For localhost / exposing port change to localhost in DevBuild.
 
 ## Installation
 Go to the [Latest Release](https://github.com/Tamino1230/RustConnect/releases/latest) and download the `RustConnectionInstaller.exe` and run it!
