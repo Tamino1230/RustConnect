@@ -206,6 +206,10 @@ func handleJoin(w http.ResponseWriter, r *http.Request) {
 
 	roomsMutex.Lock()
 	room, exists := rooms[roomID]
+	if !exists {
+		room = &Room{guests: make(map[*Client]bool)}
+		rooms[roomID] = room
+	}
 	roomsMutex.Unlock()
 
 	if !exists {

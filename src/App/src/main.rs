@@ -18,7 +18,7 @@ use once_cell::sync::Lazy;
 use tokio::time::{timeout};
 
 // constants
-const WS_SERVER_URL: &str = "ws://127.0.0.1:8080";
+const WS_SERVER_URL: &str = "wss://rustconnectserver.onrender.com";
 // semi official server. for now.
 // else change to "http://127.0.0.1:8080"
 const HTTP_SERVER_URL: &str = "https://rustconnectserver.onrender.com";
@@ -42,6 +42,12 @@ static CURSOR_IMG: Lazy<image::RgbaImage> = Lazy::new(|| {
         .to_rgba8()
 });
 
+#[derive(Clone, Debug)]
+struct UiError {
+    title: String,
+    message: String,
+}
+
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
 enum StreamTarget {
     Monitor(u32),
@@ -63,6 +69,7 @@ struct SharedAppState {
     username: String,
     connected_users: Vec<String>,
     kick_sender: Option<tokio::sync::mpsc::UnboundedSender<ControlPacket>>,
+    errors: std::collections::VecDeque<UiError>,
 }
 
 struct ScreenClientApp {
@@ -134,6 +141,7 @@ async fn main() -> Result<(), eframe::Error> {
         username: saved_username,
         connected_users: Vec::new(),
         kick_sender: None,
+        errors: std::collections::VecDeque::new(),
     }));
 
     let options = eframe::NativeOptions {
@@ -205,6 +213,24 @@ impl eframe::App for ScreenClientApp {
                 });
             });
         });
+
+        if let Some(err) = state_guard.errors.front().cloned() {
+            egui::Window::new(format!("⚠️ {}", err.title))
+                .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+                .collapsible(false)
+                .resizable(false)
+                .default_width(320.0)
+                .show(ctx, |ui| {
+                    ui.vertical_centered(|ui| {
+                        ui.add_space(8.0);
+                        ui.label(&err.message);
+                        ui.add_space(12.0);
+                        if ui.button("Dismiss").clicked() {
+                            state_guard.errors.pop_front();
+                        }
+                    });
+                });
+        }
 
         // LIVE SETTINGS POPOVER WINDOW
         if self.settings_open {
@@ -378,157 +404,162 @@ fn start_hosting_thread(
         let runtime = tokio::runtime::Runtime::new().unwrap();
 
         runtime.block_on(async move {
+            // Trim and format securely
+            let base_url = WS_SERVER_URL.trim_end_matches('/');
             let url = format!(
                 "{}/host?room={}&user={}",
-                WS_SERVER_URL, room_id, username
+                base_url,
+                room_id.trim(),
+                username.trim()
             );
 
-            let Ok((ws_stream, _)) = connect_async(url).await else {
-                return;
-            };
+            match connect_async(&url).await {
+                Ok((ws_stream, _)) => {
+                    let (write, mut read) = ws_stream.split();
+                    let write = Arc::new(TokioMutex::new(write));
+                    let write_clone = write.clone();
 
-            let (write, mut read) = ws_stream.split();
-            let write = Arc::new(TokioMutex::new(write));
-            let write_clone = write.clone();
+                    // channel for control packets
+                    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<ControlPacket>();
 
-            // channel for control packets
-            let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<ControlPacket>();
-
-            {
-                let mut guard = state.lock().unwrap();
-                guard.kick_sender = Some(tx);
-            }
-
-            // outgoing control task
-            tokio::spawn(async move {
-                while let Some(packet) = rx.recv().await {
-                    if let Ok(json) = serde_json::to_string(&packet) {
-                        let mut w = write_clone.lock().await;
-                        let _ = w.send(Message::Text(json)).await;
+                    {
+                        let mut guard = state.lock().unwrap();
+                        guard.kick_sender = Some(tx);
                     }
-                }
-            });
 
-            let state_clone = state.clone();
-            let ui_clone = ui_context.clone();
+                    // outgoing control task
+                    tokio::spawn(async move {
+                        while let Some(packet) = rx.recv().await {
+                            if let Ok(json) = serde_json::to_string(&packet) {
+                                let mut w = write_clone.lock().await;
+                                let _ = w.send(Message::Text(json)).await;
+                            }
+                        }
+                    });
 
-            // incoming messages
-            tokio::spawn(async move {
-                while let Some(msg) = read.next().await {
-                    match msg {
-                        Ok(Message::Text(txt)) => {
-                            if let Ok(ControlPacket::UserList(list)) =
-                                serde_json::from_str::<ControlPacket>(&txt)
-                            {
-                                if let Ok(mut guard) = state_clone.lock() {
-                                    guard.connected_users = list.unwrap_or_default();
+                    let state_clone = state.clone();
+                    let ui_clone = ui_context.clone();
+
+                    // incoming messages
+                    tokio::spawn(async move {
+                        while let Some(msg) = read.next().await {
+                            match msg {
+                                Ok(Message::Text(txt)) => {
+                                    if let Ok(ControlPacket::UserList(list)) =
+                                        serde_json::from_str::<ControlPacket>(&txt)
+                                    {
+                                        if let Ok(mut guard) = state_clone.lock() {
+                                            guard.connected_users = list.unwrap_or_default();
+                                        }
+                                        ui_clone.request_repaint();
+                                    }
                                 }
-                                ui_clone.request_repaint();
+                                Ok(Message::Close(_)) => break,
+                                Ok(_) => {}
+                                Err(_) => break,
+                            }
+                        }
+                    });
+
+                    // capture loop (BLOCKING THREAD, NOT TOKIO)
+                    let device_state = DeviceState::new();
+                    let cursor_size = 24;
+                    let scaled_cursor = image::imageops::resize(
+                        &*CURSOR_IMG,
+                        cursor_size,
+                        cursor_size,
+                        FilterType::Triangle,
+                    );
+
+                    while IS_HOSTING_ACTIVE.load(Ordering::SeqCst) {
+                        let loop_start = Instant::now();
+                        let mouse = device_state.get_mouse();
+                        let mouse_x = mouse.coords.0;
+                        let mouse_y = mouse.coords.1;
+
+                        let (scale, color_boost, target, max_fps) = {
+                            let guard = state.lock().unwrap();
+                            (
+                                guard.settings.resolution_scale,
+                                guard.settings.color_boost,
+                                guard.settings.target.clone(),
+                                guard.settings.max_fps,
+                            )
+                        };
+
+                        let frame_res = match target {
+                            StreamTarget::Monitor(id) => Monitor::all()
+                                .unwrap_or_default()
+                                .into_iter()
+                                .find(|m| m.id().unwrap_or(0) == id)
+                                .and_then(|m| m.capture_image().ok()),
+
+                            StreamTarget::Window(id) => Window::all()
+                                .unwrap_or_default()
+                                .into_iter()
+                                .find(|w| w.id().unwrap_or(0) == id)
+                                .and_then(|w| w.capture_image().ok()),
+                        };
+
+                        if let Some(mut img) = frame_res {
+                            if color_boost > 1.05 {
+                                for px in img.pixels_mut() {
+                                    let r = px[0] as f32;
+                                    let g = px[1] as f32;
+                                    let b = px[2] as f32;
+
+                                    let gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                                    px[0] = (gray + (r - gray) * color_boost).clamp(0.0, 255.0) as u8;
+                                    px[1] = (gray + (g - gray) * color_boost).clamp(0.0, 255.0) as u8;
+                                    px[2] = (gray + (b - gray) * color_boost).clamp(0.0, 255.0) as u8;
+                                }
+                            }
+
+                            if mouse_x >= 0
+                                && mouse_y >= 0
+                                && mouse_x < img.width() as i32
+                                && mouse_y < img.height() as i32
+                            {
+                                imageops::overlay(
+                                    &mut img,
+                                    &scaled_cursor,
+                                    mouse_x as i64,
+                                    mouse_y as i64,
+                                );
+                            }
+
+                            let w = (img.width() as f32 * scale) as u32;
+                            let h = (img.height() as f32 * scale) as u32;
+
+                            let resized = image::imageops::resize(&img, w, h, FilterType::Nearest);
+                            let mut buf = Vec::new();
+                            let mut cursor = std::io::Cursor::new(&mut buf);
+                            if image::codecs::jpeg::JpegEncoder::new_with_quality(&mut cursor, 60)
+                                .encode_image(&resized)
+                                .is_ok()
+                            {
+                                let mut w = write.lock().await;
+                                let _ = w.send(Message::Binary(buf)).await;
                             }
                         }
 
-                        Ok(Message::Close(_)) => break,
-                        Ok(_) => {}
+                        let delay = Duration::from_millis(1000 / max_fps.max(1) as u64);
+                        let elapsed = loop_start.elapsed();
 
-                        Err(_) => break,
-                    }
-                }
-            });
-
-            // capture loop (BLOCKING THREAD, NOT TOKIO)
-            let device_state = DeviceState::new();
-
-            let cursor_size = 24;
-            let scaled_cursor = image::imageops::resize(
-                &*CURSOR_IMG,
-                cursor_size,
-                cursor_size,
-                FilterType::Triangle,
-            );
-
-            while IS_HOSTING_ACTIVE.load(Ordering::SeqCst) {
-                let loop_start = Instant::now();
-
-                let mouse = device_state.get_mouse();
-                let mouse_x = mouse.coords.0;
-                let mouse_y = mouse.coords.1;
-
-                let (scale, color_boost, target, max_fps) = {
-                    let guard = state.lock().unwrap();
-                    (
-                        guard.settings.resolution_scale,
-                        guard.settings.color_boost,
-                        guard.settings.target.clone(),
-                        guard.settings.max_fps,
-                    )
-                };
-
-                let frame_res = match target {
-                    StreamTarget::Monitor(id) => Monitor::all()
-                        .unwrap_or_default()
-                        .into_iter()
-                        .find(|m| m.id().unwrap_or(0) == id)
-                        .and_then(|m| m.capture_image().ok()),
-
-                    StreamTarget::Window(id) => Window::all()
-                        .unwrap_or_default()
-                        .into_iter()
-                        .find(|w| w.id().unwrap_or(0) == id)
-                        .and_then(|w| w.capture_image().ok()),
-                };
-
-                if let Some(mut img) = frame_res {
-                    // color boost
-                    if color_boost > 1.05 {
-                        for px in img.pixels_mut() {
-                            let r = px[0] as f32;
-                            let g = px[1] as f32;
-                            let b = px[2] as f32;
-
-                            let gray = 0.299 * r + 0.587 * g + 0.114 * b;
-
-                            px[0] = (gray + (r - gray) * color_boost).clamp(0.0, 255.0) as u8;
-                            px[1] = (gray + (g - gray) * color_boost).clamp(0.0, 255.0) as u8;
-                            px[2] = (gray + (b - gray) * color_boost).clamp(0.0, 255.0) as u8;
+                        if elapsed < delay {
+                            std::thread::sleep(delay - elapsed);
                         }
                     }
-
-                    // cursor overlay (still imperfect, but stable)
-                    if mouse_x >= 0
-                        && mouse_y >= 0
-                        && mouse_x < img.width() as i32
-                        && mouse_y < img.height() as i32
-                    {
-                        imageops::overlay(
-                            &mut img,
-                            &scaled_cursor,
-                            mouse_x as i64,
-                            mouse_y as i64,
-                        );
-                    }
-
-                    let w = (img.width() as f32 * scale) as u32;
-                    let h = (img.height() as f32 * scale) as u32;
-
-                    let resized = image::imageops::resize(&img, w, h, FilterType::Nearest);
-
-                    let mut buf = Vec::new();
-                    let mut cursor = std::io::Cursor::new(&mut buf);
-
-                    if image::codecs::jpeg::JpegEncoder::new_with_quality(&mut cursor, 60)
-                        .encode_image(&resized)
-                        .is_ok()
-                    {
-                        let mut w = write.lock().await;
-                        let _ = w.send(Message::Binary(buf)).await;
-                    }
                 }
-
-                let delay = Duration::from_millis(1000 / max_fps.max(1) as u64);
-                let elapsed = loop_start.elapsed();
-
-                if elapsed < delay {
-                    std::thread::sleep(delay - elapsed);
+                Err(e) => {
+                    if let Ok(mut guard) = state.lock() {
+                        guard.errors.push_back(UiError {
+                            title: "Hosting Connection Failed".to_string(),
+                            message: format!("Render rejected connection: {}. Ensure your server web service is active.", e),
+                        });
+                    }
+                    IS_HOSTING_ACTIVE.store(false, Ordering::SeqCst);
+                    ui_context.request_repaint();
                 }
             }
         });
@@ -549,10 +580,21 @@ fn start_watching_thread(
                 "{}/join?room={}&user={}",
                 WS_SERVER_URL, room_id, username
             );
-
-            let Ok((ws_stream, _)) = connect_async(url).await else {
+            
+            let Ok((ws_stream, _)) = connect_async(&url).await else {
+                if let Ok(mut guard) = state.lock() {
+                    guard.errors.push_back(UiError {
+                        title: "Join Error".to_string(),
+                        message: format!("Connection failed: {}", url),
+                    });
+                }
+                ui_context.request_repaint();
                 return;
             };
+
+            // let Ok((ws_stream, _)) = connect_async(url).await else {
+            //     return;
+            // };
 
             let (_, mut read) = ws_stream.split();
 
