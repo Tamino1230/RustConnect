@@ -2,7 +2,7 @@
 #[cfg(target_os = "windows")]
 use winres;
 
-// building
+// building windows only!
 fn main() {
     #[cfg(target_os = "windows")]
     {
