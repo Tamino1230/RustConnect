@@ -404,13 +404,13 @@ fn start_hosting_thread(
         let runtime = tokio::runtime::Runtime::new().unwrap();
 
         runtime.block_on(async move {
-            // Trim and format securely
-            let base_url = WS_SERVER_URL.trim_end_matches('/');
+            let base_url = WS_SERVER_URL.trim().trim_end_matches('/');
+            let clean_room = room_id.trim().replace(|c: char| c.is_whitespace(), "");
+            let clean_user = username.trim().replace(|c: char| c.is_whitespace(), "");
+            
             let url = format!(
                 "{}/host?room={}&user={}",
-                base_url,
-                room_id.trim(),
-                username.trim()
+                base_url, clean_room, clean_user
             );
 
             match connect_async(&url).await {
@@ -432,7 +432,7 @@ fn start_hosting_thread(
                         while let Some(packet) = rx.recv().await {
                             if let Ok(json) = serde_json::to_string(&packet) {
                                 let mut w = write_clone.lock().await;
-                                let _ = w.send(Message::Text(json)).await;
+                                let _ = w.send(Message::Text(json.into())).await;
                             }
                         }
                     });
@@ -446,7 +446,7 @@ fn start_hosting_thread(
                             match msg {
                                 Ok(Message::Text(txt)) => {
                                     if let Ok(ControlPacket::UserList(list)) =
-                                        serde_json::from_str::<ControlPacket>(&txt)
+                                        serde_json::from_str::<ControlPacket>(&txt.to_string())
                                     {
                                         if let Ok(mut guard) = state_clone.lock() {
                                             guard.connected_users = list.unwrap_or_default();
@@ -539,7 +539,7 @@ fn start_hosting_thread(
                                 .is_ok()
                             {
                                 let mut w = write.lock().await;
-                                let _ = w.send(Message::Binary(buf)).await;
+                                let _ = w.send(Message::Binary(buf.into())).await;
                             }
                         }
 
@@ -555,7 +555,7 @@ fn start_hosting_thread(
                     if let Ok(mut guard) = state.lock() {
                         guard.errors.push_back(UiError {
                             title: "Hosting Connection Failed".to_string(),
-                            message: format!("Render rejected connection: {}. Ensure your server web service is active.", e),
+                            message: format!("URL Configuration Error: {}. Check formatting strings.", e),
                         });
                     }
                     IS_HOSTING_ACTIVE.store(false, Ordering::SeqCst);
