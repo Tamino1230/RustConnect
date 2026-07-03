@@ -1,6 +1,6 @@
 [Setup]
 AppName=RustConnect
-AppVersion=0.1
+AppVersion=1.0
 DefaultDirName={pf}\RustConnect
 DefaultGroupName=RustConnect
 SetupIconFile=icon.ico
