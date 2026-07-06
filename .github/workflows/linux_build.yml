@@ -8,7 +8,7 @@ on:
 
 jobs:
   linux:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -39,10 +39,6 @@ jobs:
       - name: Make build script executable
         run: chmod +x src/Build/linuxAppBuild.sh
 
-      - name: Clean build
-        run: |
-          cd src/App
-          cargo clean
 
       - name: Build RustConnect
         run: ./src/Build/linuxAppBuild.sh
