@@ -43,7 +43,7 @@ jobs:
         run: |
           cd src/App
           cargo clean
-          
+
       - name: Build RustConnect
         run: ./src/Build/linuxAppBuild.sh
 
