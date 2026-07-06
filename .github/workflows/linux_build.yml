@@ -39,6 +39,9 @@ jobs:
       - name: Make build script executable
         run: chmod +x src/Build/linuxAppBuild.sh
 
+      - name: Clean build
+        run: cargo clean
+
       - name: Build RustConnect
         run: ./src/Build/linuxAppBuild.sh
 

@@ -2,7 +2,7 @@
 #[cfg(target_os = "windows")]
 use winres;
 
-// building windows only! !trigger workflow.
+// building windows only! !!trigger workflow.
 fn main() {
     #[cfg(target_os = "windows")]
     {
