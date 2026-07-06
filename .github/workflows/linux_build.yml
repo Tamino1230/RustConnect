@@ -40,8 +40,10 @@ jobs:
         run: chmod +x src/Build/linuxAppBuild.sh
 
       - name: Clean build
-        run: cargo clean
-
+        run: |
+          cd src/App
+          cargo clean
+          
       - name: Build RustConnect
         run: ./src/Build/linuxAppBuild.sh
 
