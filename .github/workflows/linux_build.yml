@@ -36,6 +36,11 @@ jobs:
         with:
           workspaces: src/App
 
+      - name: Install musl OpenSSL deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools pkg-config libssl-dev
+
       - name: Make build script executable
         run: chmod +x src/Build/linuxAppBuild.sh
 

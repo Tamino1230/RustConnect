@@ -1,10 +1,8 @@
 [package]
 name = "RustConnect"
 build="build.rs"
-version = "1.0.2"
+version = "1.0.1"
 edition = "2024"
-
-reqwest = { version = "*", default-features = false, features = ["rustls-tls"] }
 
 [dependencies]
 eframe = "0.29"
