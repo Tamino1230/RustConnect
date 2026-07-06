@@ -10,10 +10,10 @@
 <hr>
 
 <p align="center">
-    <a target="_blank" href="https://github.com/Tamino1230/RustConnect/releases/download/v1.0.1/RustConnectInstaller.exe">
+    <a target="_blank" href="https://github.com/Tamino1230/RustConnect/releases/latest/download/RustConnectInstaller.exe">
         <img alt="Website" src="https://img.shields.io/badge/windows-instant_download_link-green">
     </a>
-    <a target="_blank" href="https://github.com/Tamino1230/RustConnect/releases/download/v1.0.1/RustConnect-Linux.zip">
+    <a target="_blank" href="https://github.com/Tamino1230/RustConnect/releases/latest/download/RustConnect-Linux.zip">
         <img alt="Website" src="https://img.shields.io/badge/linux-instant_download_link-blue">
     </a>
 </p>
