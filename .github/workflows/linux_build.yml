@@ -3,6 +3,13 @@ name: Build Linux
 on:
   push:
     branches: [main]
+    paths-ignore:
+        - "docs/**"
+        - ".github/**"
+        - "src/Server/**"
+        - "*.md"
+        - "LICENSE"
+        - ".gitignore"
   pull_request:
   workflow_dispatch:
 

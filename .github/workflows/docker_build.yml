@@ -6,8 +6,10 @@ on:
     paths-ignore:
         - "docs/**"
         - ".github/**"
-        - "README.md"
+        - "*.md"
         - "LICENSE"
+        - ".gitignore"
+        - "src/App/**"
 jobs:
   build:
     runs-on: ubuntu-latest

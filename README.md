@@ -4,7 +4,7 @@
 <h1 align="center">RustConnect</h1>
 
 <p align="center">
-  A written in Rust Open-Source Smooth 60fps Screensharing App with a interactive Pipe: rustconnect://CODE. Official webservice API isnt implemented yet!
+  A written in Rust Open-Source Smooth 60fps Screensharing App with a interactive Pipe: rustconnect://CODE. Official webservice API is slow!
 </p>
 
 <hr>

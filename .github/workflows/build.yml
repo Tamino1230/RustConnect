@@ -6,16 +6,13 @@ on:
     paths-ignore:
       - "docs/**"
       - ".github/**"
-      - "README.md"
+      - "*.md"
       - "LICENSE"
-      - "Server/Dockerfile"
+      - "src/Server/**"
+      - ".gitignore"
   pull_request:
     paths-ignore:
-      - "docs/**"
-      - ".github/**"
-      - "README.md"
-      - "LICENSE"
-      - "Server/Dockerfile"
+      - 1
 
 jobs:
   rust:
