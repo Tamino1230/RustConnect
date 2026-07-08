@@ -8,7 +8,6 @@ on:
       - ".github/**"
       - "**/*.md"
       - "LICENSE"
-      - "src/Server/**"
       - ".gitignore"
   pull_request:
     paths-ignore:
@@ -16,7 +15,6 @@ on:
       - ".github/**"
       - "**/*.md"
       - "LICENSE"
-      - "src/Server/**"
       - ".gitignore"
   workflow_dispatch:
 
