@@ -1,5 +1,5 @@
 
-<p align="center"><img src="docs/RustConnectIcon.png" width="128" alt="MAS Logo"></p>
+<p align="center"><img src="docs/assets/RustConnectIcon.png" width="128" alt="MAS Logo"></p>
 
 <h1 align="center">RustConnect</h1>
 
@@ -27,8 +27,8 @@
 
 <p align="center">
     <p>Help is veryyyy welcome here :3</p>
-    <img src="docs/connection.png">
-    <img height="360px" src="docs/stream.png">
+    <img src="docs/assets/connection.png">
+    <img height="360px" src="docs/assets/stream.png">
 </p>
 
 > [!CAUTION]
@@ -54,3 +54,5 @@ chmod +x linuxAppBuild.sh
 linuxAppBuild.sh
 ```
 then the **RustConnect.exe** will appear in the build folder.
+<b></b>
+<img height="300px" src="docs/assets/loop.png">
