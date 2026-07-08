@@ -7,10 +7,17 @@ on:
         - "docs/**"
         - ".github/**"
         - "src/Server/**"
-        - "*.md"
+        - "**/*.md"
         - "LICENSE"
         - ".gitignore"
   pull_request:
+    paths-ignore:
+        - "docs/**"
+        - ".github/**"
+        - "src/Server/**"
+        - "**/*.md"
+        - "LICENSE"
+        - ".gitignore"
   workflow_dispatch:
 
 jobs:

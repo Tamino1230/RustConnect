@@ -6,10 +6,19 @@ on:
     paths-ignore:
         - "docs/**"
         - ".github/**"
-        - "*.md"
+        - "**/*.md"
         - "LICENSE"
         - ".gitignore"
         - "src/App/**"
+  pull_request:
+    paths-ignore:
+        - "docs/**"
+        - ".github/**"
+        - "**/*.md"
+        - "LICENSE"
+        - ".gitignore"
+        - "src/App/**"
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
