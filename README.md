@@ -41,7 +41,6 @@ Go to the [Latest Release](https://github.com/Tamino1230/RustConnect/releases/la
 
 ## Making Dev Build
 
-### Windows
 If you wanna edit code and make a dev build run:
 ```sh
 # on windows
@@ -51,7 +50,7 @@ cd RustConnect/src/build/
 
 # on linux 
 chmod +x linuxAppBuild.sh
-./linuxAppBuild.sh
+.\linuxAppBuild.sh
 ```
 then the **RustConnect.exe** will appear in the build folder.
 <b></b>
