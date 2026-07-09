@@ -51,7 +51,7 @@ cd RustConnect/src/build/
 
 # on linux 
 chmod +x linuxAppBuild.sh
-linuxAppBuild.sh
+./linuxAppBuild.sh
 ```
 then the **RustConnect.exe** will appear in the build folder.
 <b></b>

@@ -206,10 +206,7 @@ func handleJoin(w http.ResponseWriter, r *http.Request) {
 
 	roomsMutex.Lock()
 	room, exists := rooms[roomID]
-	if !exists {
-		room = &Room{guests: make(map[*Client]bool)}
-		rooms[roomID] = room
-	}
+	// why tf was i creating when not found ;-;
 	roomsMutex.Unlock()
 
 	if !exists {
