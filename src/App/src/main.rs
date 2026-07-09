@@ -407,6 +407,8 @@ impl eframe::App for ScreenClientApp {
                                     // println!("worked: {}", clean_code);
                                     clean_code = clean;
                                 }
+                            } else {
+                                clean_code = code;
                             }
 
                             // println!("{}", clean_code);
