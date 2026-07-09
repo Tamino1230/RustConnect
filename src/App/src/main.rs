@@ -268,6 +268,9 @@ impl eframe::App for ScreenClientApp {
                         }
                         if ui.button("Dismiss").clicked() {
                             state_guard.errors.pop_front();
+                            IS_WATCHING_ACTIVE.store(false, Ordering::SeqCst);
+                            self.is_watching = false;
+                            self.texture = None;
                         }
                     });
                 });
@@ -396,9 +399,20 @@ impl eframe::App for ScreenClientApp {
                         ui.heading("Watch Room Feed");
                         ui.add(egui::TextEdit::singleline(&mut self.input_room_code).hint_text("Enter room ID"));
                         if ui.button("📺 Join Stream").clicked() && !self.input_room_code.is_empty() {
+                            let code = self.input_room_code.trim();
+                            let mut clean_code = "NULL";
+
+                            if code.starts_with("rustconnect://") {
+                                if let Some(clean) = code.strip_prefix("rustconnect://") {
+                                    // println!("worked: {}", clean_code);
+                                    clean_code = clean;
+                                }
+                            }
+
+                            // println!("{}", clean_code);
                             self.is_watching = true;
                             IS_WATCHING_ACTIVE.store(true, Ordering::SeqCst);
-                            start_watching_thread(self.state.clone(), self.input_room_code.trim().to_string(), state_guard.username.clone(), ctx.clone());
+                            start_watching_thread(self.state.clone(), clean_code.to_string(), state_guard.username.clone(), ctx.clone());
                         }
                     });
                 });
@@ -669,8 +683,17 @@ fn start_watching_thread(
                     }
 
                     Ok(Some(Ok(Message::Text(txt)))) => {
+                        // println!("{}", txt);
+
+                        // print!("HERE");
                         if txt == "KICKED" || txt == "Room not found" {
                             IS_WATCHING_ACTIVE.store(false, Ordering::SeqCst);
+                            if let Ok(mut guard) = state.lock() {
+                                guard.errors.push_back(UiError {
+                                    title: "Join Room Error".to_string(),
+                                    message: format!("Connection failed: {}", txt),
+                                });
+                            }
                             break;
                         }
                     }
